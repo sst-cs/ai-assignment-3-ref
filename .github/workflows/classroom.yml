@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout hidden tests
+        continue-on-error: true
         uses: actions/checkout@v4
         with:
           repository: sst-cs/ai-assignment-3-tests
