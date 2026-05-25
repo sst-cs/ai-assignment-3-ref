@@ -1,0 +1,109 @@
+name: Autograde Local Search Algorithms
+
+on: [push, workflow_dispatch]
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      statuses: write
+      checks: write
+
+    steps:
+      - name: Checkout student submission
+        uses: actions/checkout@v4
+
+      - name: Checkout hidden tests
+        uses: actions/checkout@v4
+        with:
+          repository: sst-cs/ai-assignment-3-tests
+          token: ${{ secrets.HIDDEN_TESTS_TOKEN }}
+          path: hidden-tests
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: HC Basic Tests
+        id: hc_basic
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'hc_basic'
+          command: 'pytest hidden-tests/tests/test_search.py -k "hc_basic"'
+          timeout: 10
+          max-score: 2
+
+      - name: HC Quality Tests
+        id: hc_quality
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'hc_quality'
+          command: 'pytest hidden-tests/tests/test_search.py -k "hc_quality"'
+          timeout: 10
+          max-score: 2
+
+      - name: SA Basic Tests
+        id: sa_basic
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'sa_basic'
+          command: 'pytest hidden-tests/tests/test_search.py -k "sa_basic"'
+          timeout: 15
+          max-score: 2
+
+      - name: SA Correctness Tests
+        id: sa_correct
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'sa_correct'
+          command: 'pytest hidden-tests/tests/test_search.py -k "sa_correct"'
+          timeout: 15
+          max-score: 2
+
+      - name: SA Determinism Tests
+        id: sa_determinism
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'sa_determinism'
+          command: 'pytest hidden-tests/tests/test_search.py -k "sa_determinism"'
+          timeout: 15
+          max-score: 2
+
+      - name: Package Results
+        id: package
+        run: |
+          HC_BASIC=$(echo "${{steps.hc_basic.outputs.result}}"     | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+          HC_QUAL=$(echo "${{steps.hc_quality.outputs.result}}"    | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+          SA_BASIC=$(echo "${{steps.sa_basic.outputs.result}}"     | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+          SA_CORR=$(echo "${{steps.sa_correct.outputs.result}}"    | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+          SA_DET=$(echo "${{steps.sa_determinism.outputs.result}}" | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+
+          TOTAL=$((HC_BASIC + HC_QUAL + SA_BASIC + SA_CORR + SA_DET))
+          echo "Calculated Total Score: $TOTAL"
+
+          for i in $(seq 1 10); do
+            STATUS="fail"; SCORE=0
+            if [ $i -le $TOTAL ]; then STATUS="pass"; SCORE=1; fi
+            JSON="{\"version\":1,\"status\":\"$STATUS\",\"max_score\":1, \"tests\":[{\"name\":\"Requirement $i\",\"status\":\"$STATUS\",\"score\":$SCORE,\"max_score\":1}]}"
+            B64=$(echo -n "$JSON" | base64 -w 0)
+            echo "R${i}_RESULTS=$B64" >> $GITHUB_ENV
+          done
+
+      - name: Autograding Reporter
+        uses: education/autograding-grading-reporter@v1
+        continue-on-error: true
+        with:
+          runners: r1,r2,r3,r4,r5,r6,r7,r8,r9,r10
