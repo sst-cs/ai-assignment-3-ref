@@ -34,6 +34,20 @@ def get_neighbors(state):
     return neighbors
 
 
+def random_state(N, rng):
+    """
+    Generate a completely random starting state for N-Queens.
+
+    Args:
+        N (int): Board size.
+        rng:     a random.Random instance (for reproducibility).
+
+    Returns:
+        list[int]: A list of N integers each in [0, N-1].
+    """
+    return [rng.randint(0, N - 1) for _ in range(N)]
+
+
 def random_neighbor(state, rng):
     """
     Pick a random single-move neighbour using the supplied RNG.

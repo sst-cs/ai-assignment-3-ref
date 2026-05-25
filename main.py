@@ -2,28 +2,53 @@
 Demo runner for AI Assignment 03 – Local Search (N-Queens).
 Run:  python main.py
 """
-import random
 from utils import num_conflicts
-from search import hill_climbing, simulated_annealing
+from search import hill_climbing, random_restart_hc, simulated_annealing, beam_search
 
 N = 8
-random.seed(0)
-initial = [random.randint(0, N - 1) for _ in range(N)]
+INITIAL = [3, 6, 4, 1, 5, 0, 2, 7]   # a board with several conflicts
 
 print(f"N = {N}")
-print(f"Initial state    : {initial}")
-print(f"Initial conflicts: {num_conflicts(initial)}\n")
+print(f"Initial state    : {INITIAL}")
+print(f"Initial conflicts: {num_conflicts(INITIAL)}\n")
+print("=" * 50)
 
-hc = hill_climbing(N, initial[:])
+# ── Hill Climbing ─────────────────────────────────────────────────────────────
+hc = hill_climbing(N, INITIAL[:])
 if hc is not None:
-    print(f"Hill Climbing result   : {hc}")
-    print(f"Conflicts              : {num_conflicts(hc)}\n")
+    print(f"[HC]   Result     : {hc}")
+    print(f"[HC]   Conflicts  : {num_conflicts(hc)}")
 else:
-    print("Hill Climbing returned None – check your implementation.\n")
+    print("[HC]   Returned None – check your implementation.")
 
-sa = simulated_annealing(N, initial[:])
-if sa is not None:
-    print(f"Simulated Annealing result: {sa}")
-    print(f"Conflicts                 : {num_conflicts(sa)}")
+print()
+
+# ── Random-Restart Hill Climbing ─────────────────────────────────────────────
+rrhc = random_restart_hc(N, max_restarts=20, seed=42)
+if rrhc is not None:
+    state, idx = rrhc
+    print(f"[RRHC] Result     : {state}")
+    print(f"[RRHC] Conflicts  : {num_conflicts(state)}")
+    print(f"[RRHC] Best found on restart #{idx}")
 else:
-    print("Simulated Annealing returned None – check your implementation.")
+    print("[RRHC] Returned None – check your implementation.")
+
+print()
+
+# ── Simulated Annealing ───────────────────────────────────────────────────────
+sa = simulated_annealing(N, INITIAL[:], T=30.0, cooling_rate=0.995, seed=42)
+if sa is not None:
+    print(f"[SA]   Result     : {sa}")
+    print(f"[SA]   Conflicts  : {num_conflicts(sa)}")
+else:
+    print("[SA]   Returned None – check your implementation.")
+
+print()
+
+# ── Beam Search ───────────────────────────────────────────────────────────────
+beam = beam_search(N, beam_width=6, seed=42)
+if beam is not None:
+    print(f"[BEAM] Result     : {beam}")
+    print(f"[BEAM] Conflicts  : {num_conflicts(beam)}")
+else:
+    print("[BEAM] Returned None – check your implementation.")

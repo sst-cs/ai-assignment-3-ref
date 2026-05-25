@@ -40,7 +40,7 @@ jobs:
           test-name: 'hc_basic'
           command: 'pytest hidden-tests/tests/test_search.py -k "hc_basic"'
           timeout: 10
-          max-score: 2
+          max-score: 1
 
       - name: HC Quality Tests
         id: hc_quality
@@ -50,6 +50,16 @@ jobs:
           test-name: 'hc_quality'
           command: 'pytest hidden-tests/tests/test_search.py -k "hc_quality"'
           timeout: 10
+          max-score: 1
+
+      - name: Random-Restart HC Tests
+        id: rrhc
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'rrhc'
+          command: 'pytest hidden-tests/tests/test_search.py -k "rrhc"'
+          timeout: 30
           max-score: 2
 
       - name: SA Basic Tests
@@ -60,7 +70,7 @@ jobs:
           test-name: 'sa_basic'
           command: 'pytest hidden-tests/tests/test_search.py -k "sa_basic"'
           timeout: 15
-          max-score: 2
+          max-score: 1
 
       - name: SA Correctness Tests
         id: sa_correct
@@ -69,7 +79,7 @@ jobs:
         with:
           test-name: 'sa_correct'
           command: 'pytest hidden-tests/tests/test_search.py -k "sa_correct"'
-          timeout: 15
+          timeout: 20
           max-score: 2
 
       - name: SA Determinism Tests
@@ -79,7 +89,17 @@ jobs:
         with:
           test-name: 'sa_determinism'
           command: 'pytest hidden-tests/tests/test_search.py -k "sa_determinism"'
-          timeout: 15
+          timeout: 20
+          max-score: 1
+
+      - name: Beam Search Tests
+        id: beam
+        uses: education/autograding-command-grader@v1
+        continue-on-error: true
+        with:
+          test-name: 'beam'
+          command: 'pytest hidden-tests/tests/test_search.py -k "beam"'
+          timeout: 30
           max-score: 2
 
       - name: Package Results
@@ -87,17 +107,19 @@ jobs:
         run: |
           HC_BASIC=$(echo "${{steps.hc_basic.outputs.result}}"     | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
           HC_QUAL=$(echo "${{steps.hc_quality.outputs.result}}"    | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+          RRHC=$(echo "${{steps.rrhc.outputs.result}}"             | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
           SA_BASIC=$(echo "${{steps.sa_basic.outputs.result}}"     | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
           SA_CORR=$(echo "${{steps.sa_correct.outputs.result}}"    | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
           SA_DET=$(echo "${{steps.sa_determinism.outputs.result}}" | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
+          BEAM=$(echo "${{steps.beam.outputs.result}}"             | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
 
-          TOTAL=$((HC_BASIC + HC_QUAL + SA_BASIC + SA_CORR + SA_DET))
-          echo "Calculated Total Score: $TOTAL"
+          TOTAL=$((HC_BASIC + HC_QUAL + RRHC + SA_BASIC + SA_CORR + SA_DET + BEAM))
+          echo "Calculated Total Score: $TOTAL / 10"
 
           for i in $(seq 1 10); do
             STATUS="fail"; SCORE=0
             if [ $i -le $TOTAL ]; then STATUS="pass"; SCORE=1; fi
-            JSON="{\"version\":1,\"status\":\"$STATUS\",\"max_score\":1, \"tests\":[{\"name\":\"Requirement $i\",\"status\":\"$STATUS\",\"score\":$SCORE,\"max_score\":1}]}"
+            JSON="{\"version\":1,\"status\":\"$STATUS\",\"max_score\":1,\"tests\":[{\"name\":\"Requirement $i\",\"status\":\"$STATUS\",\"score\":$SCORE,\"max_score\":1}]}"
             B64=$(echo -n "$JSON" | base64 -w 0)
             echo "R${i}_RESULTS=$B64" >> $GITHUB_ENV
           done
