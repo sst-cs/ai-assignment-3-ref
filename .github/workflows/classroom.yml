@@ -23,6 +23,14 @@ jobs:
           token: ${{ secrets.HIDDEN_TESTS_TOKEN }}
           path: hidden-tests
 
+      - name: Verify hidden tests available
+        run: |
+          if [ ! -f hidden-tests/tests/test_search.py ]; then
+            echo "::error title=Hidden tests missing::Could not fetch the hidden tests. The HIDDEN_TESTS_TOKEN org secret is missing or invalid (GitHub returns 'Bad credentials' when a token is expired/revoked). An org admin must update HIDDEN_TESTS_TOKEN and re-run. NOTE: template/-ref repos are expected to fail here."
+            exit 1
+          fi
+          echo "Hidden tests present — proceeding."
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
