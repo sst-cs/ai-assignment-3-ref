@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout student submission
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the late-penalty can read the student's last code-commit date
 
       - name: Checkout hidden tests
         continue-on-error: true
@@ -124,6 +126,26 @@ jobs:
 
           TOTAL=$(( ${HC_BASIC:-0} + ${HC_QUAL:-0} + ${RRHC:-0} + ${SA_BASIC:-0} + ${SA_CORR:-0} + ${SA_DET:-0} + ${BEAM:-0} ))
           echo "Calculated Total Score: $TOTAL / 10"
+
+          # ── Late-submission penalty (Assignment 3) ──────────────────────────
+          #   on time  (<= 2026-06-07 11:59 PM PKT = 18:59 UTC) → full marks
+          #   1-7 days late                                     → -40% flat (x0.6)
+          #   > 7 days late (after 2026-06-14 11:59 PM PKT)     → zero credit
+          DEADLINE_EPOCH=$(date -d "2026-06-07T18:59:00Z" +%s)
+          ZERO_EPOCH=$(date -d "2026-06-14T18:59:00Z" +%s)
+          LAST_CODE_ISO=$(git log --format="%cI" -- . ':(exclude).github/' 2>/dev/null | head -1)
+          [ -z "$LAST_CODE_ISO" ] && LAST_CODE_ISO=$(git log -1 --format=%cI)
+          LAST_CODE_EPOCH=$(date -d "$LAST_CODE_ISO" +%s 2>/dev/null || echo 0)
+          if [ "$LAST_CODE_EPOCH" -gt "$ZERO_EPOCH" ]; then
+            echo "VERY LATE >7 days (last code commit: $LAST_CODE_ISO) — zero credit"
+            TOTAL=0
+          elif [ "$LAST_CODE_EPOCH" -gt "$DEADLINE_EPOCH" ]; then
+            echo "LATE 1-7 days (last code commit: $LAST_CODE_ISO) — applying -40% flat penalty"
+            TOTAL=$(( TOTAL * 6 / 10 ))
+            echo "Score after penalty: $TOTAL / 10"
+          else
+            echo "ON TIME (last code commit: $LAST_CODE_ISO) — no penalty"
+          fi
 
           for i in $(seq 1 10); do
             STATUS="fail"; SCORE=0
