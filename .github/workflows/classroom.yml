@@ -114,7 +114,7 @@ jobs:
           SA_DET=$(echo "${{steps.sa_determinism.outputs.result}}" | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
           BEAM=$(echo "${{steps.beam.outputs.result}}"             | base64 -d 2>/dev/null | jq '.tests[0].score // .score // 0')
 
-          TOTAL=$((HC_BASIC + HC_QUAL + RRHC + SA_BASIC + SA_CORR + SA_DET + BEAM))
+          TOTAL=$(( ${HC_BASIC:-0} + ${HC_QUAL:-0} + ${RRHC:-0} + ${SA_BASIC:-0} + ${SA_CORR:-0} + ${SA_DET:-0} + ${BEAM:-0} ))
           echo "Calculated Total Score: $TOTAL / 10"
 
           for i in $(seq 1 10); do
