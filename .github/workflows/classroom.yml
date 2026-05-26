@@ -45,7 +45,7 @@ jobs:
 
       - name: HC Basic Tests
         id: hc_basic
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'hc_basic'
@@ -55,7 +55,7 @@ jobs:
 
       - name: HC Quality Tests
         id: hc_quality
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'hc_quality'
@@ -65,7 +65,7 @@ jobs:
 
       - name: Random-Restart HC Tests
         id: rrhc
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'rrhc'
@@ -75,7 +75,7 @@ jobs:
 
       - name: SA Basic Tests
         id: sa_basic
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'sa_basic'
@@ -85,7 +85,7 @@ jobs:
 
       - name: SA Correctness Tests
         id: sa_correct
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'sa_correct'
@@ -95,7 +95,7 @@ jobs:
 
       - name: SA Determinism Tests
         id: sa_determinism
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'sa_determinism'
@@ -105,7 +105,7 @@ jobs:
 
       - name: Beam Search Tests
         id: beam
-        uses: education/autograding-command-grader@v1
+        uses: classroom-resources/autograding-command-grader@v1
         continue-on-error: true
         with:
           test-name: 'beam'
@@ -156,7 +156,7 @@ jobs:
           done
 
       - name: Autograding Reporter
-        uses: education/autograding-grading-reporter@v1
+        uses: classroom-resources/autograding-grading-reporter@v1
         continue-on-error: true
         with:
           runners: r1,r2,r3,r4,r5,r6,r7,r8,r9,r10
